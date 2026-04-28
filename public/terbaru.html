@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terbaru - KUCING PREMIUM</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="/images/logo.png" type="image/png">
+</head>
+<body>
+  <div class="sakura-bg"></div>
+  <div class="page-wrapper">
+    <nav class="navbar">
+      <a href="/" class="nav-logo">
+        <div class="logo-icon">
+          <img src="/images/logo.png" alt="Logo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='&#128049;'">
+        </div>
+        <span class="logo-text">KUCING PREMIUM</span>
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link"><span>Beranda</span></a>
+        <a href="/terbaru" class="nav-link"><span>Terbaru</span></a>
+        <a href="/douyin" class="nav-link"><span>Douyin</span></a>
+        <a href="/lokal" class="nav-link"><span>Lokal</span></a>
+        <a href="/barat" class="nav-link"><span>Barat</span></a>
+        <a href="/cosplayer" class="nav-link"><span>Cosplayer</span></a>
+        <a href="/bochil" class="nav-link"><span>Bochil</span></a>
+      </div>
+    </nav>
+
+    <section class="section" style="padding-top:30px;">
+      <div class="section-header">
+        <h2 class="section-title">Video Terbaru</h2>
+        <span style="color:var(--text-dim);font-size:13px;" id="total-count"></span>
+      </div>
+      <div class="video-grid" id="video-grid"></div>
+      <div style="text-align:center;margin-top:24px;" id="load-more-wrap" hidden>
+        <button class="btn-bubble btn-outline" id="load-more-btn" onclick="loadMore()">Muat Lebih Banyak</button>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-logo">KUCING PREMIUM</div>
+      <p>Platform video entertainment terbaik.</p>
+    </footer>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    let currentPage = 1;
+    const LIMIT = 20;
+
+    async function loadMore() {
+      currentPage++;
+      const btn = document.getElementById('load-more-btn');
+      btn.textContent = 'Memuat...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/videos?page=${currentPage}&limit=${LIMIT}`);
+        const data = await res.json();
+        const grid = document.getElementById('video-grid');
+        if (data.videos.length > 0) {
+          data.videos.forEach(v => {
+            const div = document.createElement('div');
+            div.innerHTML = videoCardHTML(v);
+            grid.appendChild(div.firstElementChild);
+          });
+        }
+        if (currentPage >= data.pages) {
+          document.getElementById('load-more-wrap').hidden = true;
+        }
+      } catch (e) {}
+
+      btn.textContent = 'Muat Lebih Banyak';
+      btn.disabled = false;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const grid = document.getElementById('video-grid');
+      const data = await fetchVideos(grid, { page: 1, limit: LIMIT });
+      if (data) {
+        document.getElementById('total-count').textContent = `${data.total} video`;
+        if (data.pages > 1) {
+          document.getElementById('load-more-wrap').hidden = false;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kategori - KUCING PREMIUM</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="/images/logo.png" type="image/png">
+</head>
+<body>
+  <div class="sakura-bg"></div>
+  <div class="page-wrapper">
+    <nav class="navbar">
+      <a href="/" class="nav-logo">
+        <div class="logo-icon">
+          <img src="/images/logo.png" alt="Logo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='&#128049;'">
+        </div>
+        <span class="logo-text">KUCING PREMIUM</span>
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link"><span>Beranda</span></a>
+        <a href="/terbaru" class="nav-link"><span>Terbaru</span></a>
+        <a href="/douyin" class="nav-link"><span>Douyin</span></a>
+        <a href="/lokal" class="nav-link"><span>Lokal</span></a>
+        <a href="/barat" class="nav-link"><span>Barat</span></a>
+        <a href="/cosplayer" class="nav-link"><span>Cosplayer</span></a>
+        <a href="/bochil" class="nav-link"><span>Bochil</span></a>
+      </div>
+    </nav>
+
+    <!-- Category Banner -->
+    <div style="padding:24px 30px 10px;display:flex;align-items:center;gap:16px;">
+      <div id="cat-icon" style="width:54px;height:54px;background:linear-gradient(135deg,var(--pink-dark),var(--pink-mid));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:var(--shadow-pink);"></div>
+      <div>
+        <h1 id="cat-title" style="font-family:'Fredoka One',cursive;font-size:28px;background:linear-gradient(135deg,var(--pink-light),var(--pink-mid));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;"></h1>
+        <p id="cat-desc" style="color:var(--text-dim);font-size:13px;margin-top:2px;"></p>
+      </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="cat-tabs">
+      <a href="/" class="cat-tab">Semua</a>
+      <a href="/douyin" class="cat-tab" data-cat="douyin">Douyin</a>
+      <a href="/lokal" class="cat-tab" data-cat="lokal">Lokal</a>
+      <a href="/barat" class="cat-tab" data-cat="barat">Barat</a>
+      <a href="/cosplayer" class="cat-tab" data-cat="cosplayer">Cosplayer</a>
+      <a href="/bochil" class="cat-tab" data-cat="bochil">Bochil</a>
+    </div>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title" id="section-title">Video</h2>
+        <span style="color:var(--text-dim);font-size:13px;" id="total-count"></span>
+      </div>
+      <div class="video-grid" id="video-grid"></div>
+      <div style="text-align:center;margin-top:24px;" id="load-more-wrap" hidden>
+        <button class="btn-bubble btn-outline" id="load-more-btn" onclick="loadMore()">Muat Lebih Banyak</button>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-logo">KUCING PREMIUM</div>
+      <p>Platform video entertainment terbaik.</p>
+    </footer>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    const catInfo = {
+      douyin: { title: 'Douyin', desc: 'Video Douyin terpopuler dan terbaru', icon: 'D' },
+      lokal: { title: 'Lokal', desc: 'Video kreator lokal terbaik Indonesia', icon: 'L' },
+      barat: { title: 'Barat', desc: 'Video dari kreator Barat terpopuler', icon: 'B' },
+      cosplayer: { title: 'Cosplayer', desc: 'Video cosplayer keren dari berbagai fandom', icon: 'C' },
+      bochil: { title: 'Bochil', desc: 'Koleksi video Bochil spesial', icon: 'P' }
+    };
+
+    const path = window.location.pathname.replace('/', '');
+    const cat = catInfo[path] || { title: 'Video', desc: '', icon: 'V' };
+    const catKey = path;
+
+    document.title = `${cat.title} - KUCING PREMIUM`;
+    document.getElementById('cat-title').textContent = cat.title;
+    document.getElementById('cat-desc').textContent = cat.desc;
+    document.getElementById('cat-icon').textContent = cat.icon;
+    document.getElementById('section-title').textContent = `Video ${cat.title}`;
+
+    // Active tab
+    document.querySelectorAll('[data-cat]').forEach(el => {
+      if (el.dataset.cat === catKey) el.classList.add('active');
+    });
+
+    let currentPage = 1;
+    const LIMIT = 20;
+
+    async function loadMore() {
+      currentPage++;
+      const btn = document.getElementById('load-more-btn');
+      btn.textContent = 'Memuat...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/videos?category=${catKey}&page=${currentPage}&limit=${LIMIT}`);
+        const data = await res.json();
+        const grid = document.getElementById('video-grid');
+        if (data.videos.length > 0) {
+          data.videos.forEach(v => {
+            const div = document.createElement('div');
+            div.innerHTML = videoCardHTML(v);
+            grid.appendChild(div.firstElementChild);
+          });
+        }
+        if (currentPage >= data.pages) {
+          document.getElementById('load-more-wrap').hidden = true;
+        }
+      } catch (e) {}
+
+      btn.textContent = 'Muat Lebih Banyak';
+      btn.disabled = false;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const grid = document.getElementById('video-grid');
+      const data = await fetchVideos(grid, { category: catKey, page: 1, limit: LIMIT });
+      if (data) {
+        document.getElementById('total-count').textContent = `${data.total} video`;
+        if (data.pages > 1) {
+          document.getElementById('load-more-wrap').hidden = false;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
